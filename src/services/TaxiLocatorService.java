@@ -21,24 +21,24 @@ public class TaxiLocatorService extends Service {
 	@Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 		Log.v("TaxiLocatorService", "Received intent to start");
-        
-		LocationManager m = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
-
-		// This is the real location code, to be used for testing on devices (not emulators)
-//		Criteria crit = new Criteria();
-//		crit.setAccuracy(Criteria.ACCURACY_FINE);
-//		Location location = m.getLastKnownLocation(m.getBestProvider(crit, true));
+		
+		// This is the real location code, to be used for testing on devices (not emulators)        
+		/*LocationManager locationManager = 
+				(LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+		Criteria crit = new Criteria();
+		crit.setAccuracy(Criteria.ACCURACY_FINE);
+		Location location = m.getLastKnownLocation(m.getBestProvider(crit, true));*/
 		
 		// Add mock location (near UB north campus)		
-		Location loc = new Location("gps");
-		loc.setLatitude(43.0);
-		loc.setLongitude(-78.7);
+		Location location = new Location("gps");
+		location.setLatitude(43.0);
+		location.setLongitude(-78.7);
 		
 		if(intent != null) {
 			Messenger messenger = (Messenger) intent.getExtras().get(BacchusActivity.TAXI_HANDLER);
 			
 			if(_t == null || !_t.isAlive()) {
-				_t = new Thread(new TaxiLocator(messenger, loc));
+				_t = new Thread(new TaxiLocator(messenger, location));
 				_t.start();
 			}
 		}

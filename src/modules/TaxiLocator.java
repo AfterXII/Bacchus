@@ -20,7 +20,9 @@ public class TaxiLocator implements Runnable {
 	
 	public static final String JSON_STREAM = "NewJsonStream";
 	
-	private static final String API_KEY = "AIzaSyBdXAPJl6qkgF1BMAL9NPOszpG16P1E8vQ";
+	private final String API_KEY = "AIzaSyBdXAPJl6qkgF1BMAL9NPOszpG16P1E8vQ";
+	private final String RESULTS = "results";
+	
 	private Messenger _messenger;
 	private Location _location;
 	
@@ -50,28 +52,29 @@ public class TaxiLocator implements Runnable {
 	}
 	
 	private String buildURL(String baseURL, Map<String, String> attributes) {
-		String ret = baseURL;
+		String url = baseURL;
 		
 		for(Map.Entry<String, String> e : attributes.entrySet()) {
-			ret += "&" + e.getKey() + "=" + e.getValue();
+			url += "&" + e.getKey() + "=" + e.getValue();
 		}
 		
-		return ret;
+		return url;
 	}
 	
 	private TaxiContainer<String, String> getPlaceResults(String jsonData, ArrayList<String> innerAttributeNames) {
-		TaxiContainer<String, String> ret = null;
-		
+		TaxiContainer<String, String> result = null;
 		JSONObject json;
+		
 		try {
-			ret = new TaxiContainer<String, String>();
+			result = new TaxiContainer<String, String>();
 			json = new JSONObject(jsonData);
-			JSONArray array = json.getJSONArray("results");
+			JSONArray array = json.getJSONArray(this.RESULTS);
+			
 			for(int i = 0; i < array.length(); i++) {
-				for(String a : innerAttributeNames) {
-					String s = array.getJSONObject(i).getString(a);
-					if(s != null) {
-						ret.put(a, s);
+				for(String attribute : innerAttributeNames) {
+					String value = array.getJSONObject(i).getString(attribute);
+					if(value != null) {
+						result.put(attribute, value);
 					}
 				}
 			}
@@ -79,11 +82,11 @@ public class TaxiLocator implements Runnable {
 			Log.e("TaxiLocator", "JSONException: " + e);
 		}
 		
-		return ret;
+		return result;
 	}
 	
 	private String getJson() {
-		String ret = "";
+		String json = "";
 		
 		String baseURL = "https://maps.googleapis.com/maps/api/place/search/json?";
 		
@@ -97,7 +100,6 @@ public class TaxiLocator implements Runnable {
 		attributes.put("keyword", "taxi");
 		attributes.put("sensor", "false");
 		attributes.put("key", this.API_KEY);
-		
 		String url = this.buildURL(baseURL, attributes);
 		
 		Log.v("TaxiLocator", "Built URL: " + url);
@@ -110,7 +112,7 @@ public class TaxiLocator implements Runnable {
 			String add = "";
 			while(add != null) {
 				add = in.readLine();
-				ret += add;
+				json += add;
 			}
 		} catch(MalformedURLException e) {
 			Log.e("TaxiLocator", "MalformedURLException: " + e);
@@ -118,8 +120,9 @@ public class TaxiLocator implements Runnable {
 			Log.e("TaxiLocator", "IOException: " + e);
 		}
 		
-		Log.v("TaxiLocator", "Retrieved JSON stream: " + ret);
-		return ret;
+		Log.v("TaxiLocator", "Retrieved JSON stream: " + json);
+		
+		return json;
 	}
 
 }

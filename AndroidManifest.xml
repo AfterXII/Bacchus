@@ -5,6 +5,12 @@
     android:versionName="1.0" >
 
     <uses-sdk android:minSdkVersion="15" />
+    <uses-permission
+        android:name="android.permission.INTERNET" />
+    <uses-permission 
+        android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission 
+        android:name="android.permission.ACCESS_MOCK_LOCATION" />
 
     <application
         android:icon="@drawable/ic_launcher"
@@ -21,6 +27,9 @@
         <activity
             android:label="@string/addDrink"
             android:name=".AddDrinkActivity" ></activity>
+        <service
+            android:enabled="true"
+            android:name="services.TaxiLocatorService" ></service>
     </application>
 
 </manifest>
