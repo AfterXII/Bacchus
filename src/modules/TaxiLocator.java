@@ -40,6 +40,7 @@ public class TaxiLocator implements Runnable {
 			ArrayList<String> attributeNames = new ArrayList<String>();
 			attributeNames.add("vicinity");
 			TaxiContainer<String, String> result = this.getPlaceResults(json, attributeNames);
+			Log.v("TaxiLocator", "Results size: " + result.size());
 			bundle.putParcelable(this.JSON_STREAM, result);
 			try {
 				Message msg = new Message();
@@ -69,6 +70,8 @@ public class TaxiLocator implements Runnable {
 			result = new TaxiContainer<String, String>();
 			json = new JSONObject(jsonData);
 			JSONArray array = json.getJSONArray(this.RESULTS);
+			
+			Log.v("TaxiLocator", "Size of array is " + array.length());
 			
 			for(int i = 0; i < array.length(); i++) {
 				for(String attribute : innerAttributeNames) {

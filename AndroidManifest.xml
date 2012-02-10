@@ -27,6 +27,9 @@
         <activity
             android:label="@string/addDrink"
             android:name=".AddDrinkActivity" ></activity>
+        <activity
+            android:label="@string/TaxiServices"
+            android:name="activities.TaxiServiceActivity" ></activity>
         <service
             android:enabled="true"
             android:name="services.TaxiLocatorService" ></service>

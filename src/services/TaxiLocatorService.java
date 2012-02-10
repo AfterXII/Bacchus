@@ -4,6 +4,7 @@ import modules.TaxiLocator;
 
 import com.projects.bacchus.BacchusActivity;
 
+import activities.TaxiServiceActivity;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -35,7 +36,7 @@ public class TaxiLocatorService extends Service {
 		location.setLongitude(-78.7);
 		
 		if(intent != null) {
-			Messenger messenger = (Messenger) intent.getExtras().get(BacchusActivity.TAXI_HANDLER);
+			Messenger messenger = (Messenger) intent.getExtras().get(TaxiServiceActivity.NEW_TAXI_HANDLER);
 			
 			if(_t == null || !_t.isAlive()) {
 				_t = new Thread(new TaxiLocator(messenger, location));
