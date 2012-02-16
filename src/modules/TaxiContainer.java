@@ -4,9 +4,10 @@ import java.util.HashMap;
 import java.util.Map;
 import android.os.Parcel;
 import android.os.Parcelable;
+import java.util.ArrayList;
 
 public class TaxiContainer<K, V> extends HashMap<String, String> implements Parcelable {
-
+	
 	private static final long serialVersionUID = 8792804276733547302L;
 	
 	public TaxiContainer() {}

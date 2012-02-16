@@ -1,5 +1,7 @@
 package handlers;
 
+import java.util.Map;
+
 import android.os.Handler;
 import android.os.Message;
 import activities.TaxiServiceActivity;
@@ -19,9 +21,16 @@ public class AddListItemHandler extends Handler {
 		TaxiContainer<String, String> result = new TaxiContainer<String, String>();
 		result = msg.getData().getParcelable(TaxiLocator.JSON_STREAM);
 		
-		String newItem = result.entrySet().toString();
-		
-		_tsa.addItem(newItem);
+		if(result.size() > 0) {
+//			String newItem = result.entrySet().toString();
+//			_tsa.addItem(newItem);
+			for(Map.Entry<String, String> m : result.entrySet()) {
+				String newItem = m.getKey() + ": " + m.getValue();
+				_tsa.addItem(newItem);
+			}
+ 		} else {
+			_tsa.addItem("No nearby taxis found.");
+		}
 	}
 	
 }
