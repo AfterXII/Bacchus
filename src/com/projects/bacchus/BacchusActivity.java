@@ -10,13 +10,6 @@ import android.view.View;
 public class BacchusActivity extends Activity {
 
 	public static final String TAXI_HANDLER = "NewTaxiHandler";
-
-	public void startAddDrink(View v) {
-		Log.v("BacchusActivity", "Starting add drink activity...");
-
-		Intent intent = new Intent(this, AddDrinkActivity.class);
-		startActivity(intent);
-	}
 	
 	public void findTaxis(View v) {
 		Log.v("BacchusActivity", "Starting taxi finder activity...");

@@ -44,7 +44,7 @@ public class TaxiLocatorService extends Service {
 			}
 		}
 		
-		return START_NOT_STICKY;
+		return START_STICKY;
     }
 	
 	@Override

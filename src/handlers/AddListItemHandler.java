@@ -22,8 +22,6 @@ public class AddListItemHandler extends Handler {
 		result = msg.getData().getParcelable(TaxiLocator.JSON_STREAM);
 		
 		if(result.size() > 0) {
-//			String newItem = result.entrySet().toString();
-//			_tsa.addItem(newItem);
 			for(Map.Entry<String, String> m : result.entrySet()) {
 				String newItem = m.getKey() + ": " + m.getValue();
 				_tsa.addItem(newItem);
