@@ -5,7 +5,7 @@ import java.util.Map;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-public class TaxiContainer<K, V> extends HashMap<String, String> implements Parcelable {
+public class TaxiContainer extends HashMap<String, String> implements Parcelable {
 	
 	private static final long serialVersionUID = 8792804276733547302L;
 	
@@ -21,11 +21,11 @@ public class TaxiContainer<K, V> extends HashMap<String, String> implements Parc
 		}
 	}
 
-	public static final Creator<TaxiContainer<String, String>> CREATOR = new Creator<TaxiContainer<String, String>>() {
-		public TaxiContainer<String, String> createFromParcel(Parcel source) {
-			return new TaxiContainer<String, String>(source);
+	public static final Creator<TaxiContainer> CREATOR = new Creator<TaxiContainer>() {
+		public TaxiContainer createFromParcel(Parcel source) {
+			return new TaxiContainer(source);
 		}
-		public TaxiContainer<String, String>[] newArray(int size) {
+		public TaxiContainer[] newArray(int size) {
 			return new TaxiContainer[size];
 		}
 	};

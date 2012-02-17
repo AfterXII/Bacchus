@@ -26,7 +26,7 @@ public class TaxiLocator implements Runnable {
 	private Location _location;
 	
 	private StringCacher _locationCache;
-	private ObjectCacher<TaxiContainer<String,String>> _taxiCache;
+	private ObjectCacher<TaxiContainer> _taxiCache;
 
 	private final double LOC_TOLERANCE = 5;
 
@@ -42,13 +42,13 @@ public class TaxiLocator implements Runnable {
 		_forceRefresh = forceRefresh;
 		
 		_locationCache = new StringCacher(AbstractCacher.LOCATION);
-		_taxiCache = new ObjectCacher<TaxiContainer<String,String>>(AbstractCacher.TAXI_SERVICES);
+		_taxiCache = new ObjectCacher<TaxiContainer>(AbstractCacher.TAXI_SERVICES);
 	}
 	
 	@Override
 	public void run() {
 		try {
-			TaxiContainer<String, String> sourceData = this.handleCachedData();
+			TaxiContainer sourceData = this.handleCachedData();
 			_messenger.send(this.createMessage(sourceData));
 		} catch (RemoteException e) {
 			Log.e("TaxiLocator", "RemoteException: " + e);
@@ -56,8 +56,8 @@ public class TaxiLocator implements Runnable {
 
 	}
 
-	public TaxiContainer<String, String> handleCachedData() {
-		TaxiContainer<String, String> data = null;
+	public TaxiContainer handleCachedData() {
+		TaxiContainer data = null;
 
 		double diff = 0;
 
@@ -94,7 +94,7 @@ public class TaxiLocator implements Runnable {
 		}
 		else if(diff < this.LOC_TOLERANCE && cachedLocationString != null) {
 			Log.v("TaxiLocator", "Retrieving cached taxi services...");
-			data = (TaxiContainer<String, String>) _taxiCache.readData();
+			data = (TaxiContainer) _taxiCache.readData();
 		}
 
 		String saveLocation = _location.getLatitude() + "," + _location.getLongitude();
@@ -108,7 +108,7 @@ public class TaxiLocator implements Runnable {
 		Bundle bundle = new Bundle();
 
 		if(o instanceof TaxiContainer) {
-			bundle.putParcelable(this.JSON_STREAM, (TaxiContainer<?, ?>) o);
+			bundle.putParcelable(this.JSON_STREAM, (TaxiContainer) o);
 		} else {
 			Log.e("TaxiLocator", "TaxiLocator cannot bundle type " + o.getClass());
 		}
@@ -118,12 +118,12 @@ public class TaxiLocator implements Runnable {
 		return msg;
 	}
 
-	private TaxiContainer<String, String> getPlaceResults(String jsonData) {
-		TaxiContainer<String, String> result = null;
+	private TaxiContainer getPlaceResults(String jsonData) {
+		TaxiContainer result = null;
 		JSONObject json;
 
 		try {
-			result = new TaxiContainer<String, String>();
+			result = new TaxiContainer();
 			json = new JSONObject(jsonData);
 			JSONArray array = json.getJSONArray("results");
 

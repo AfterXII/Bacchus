@@ -18,7 +18,7 @@ public class AddListItemHandler extends Handler {
 	
 	@Override
 	public void handleMessage(Message msg) {
-		TaxiContainer<String, String> result = new TaxiContainer<String, String>();
+		TaxiContainer result = new TaxiContainer();
 		result = msg.getData().getParcelable(TaxiLocator.JSON_STREAM);
 		
 		if(result.size() > 0) {
