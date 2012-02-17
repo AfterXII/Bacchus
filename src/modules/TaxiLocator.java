@@ -1,10 +1,5 @@
 package modules;
 
-import java.io.DataInputStream;
-import java.io.IOException;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 import org.json.JSONArray;
@@ -16,13 +11,13 @@ import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
 import android.util.Log;
+import modules.WebUtils;
 
 public class TaxiLocator implements Runnable {
 
 	public static final String JSON_STREAM = "NewJsonStream";
 
 	private final String API_KEY = "AIzaSyBdXAPJl6qkgF1BMAL9NPOszpG16P1E8vQ";
-	private final String RESULTS = "results";
 
 	private Messenger _messenger;
 	private Location _location;
@@ -41,10 +36,9 @@ public class TaxiLocator implements Runnable {
 		_taxiCache = new DataCacher(DataCacher.TAXI_SERVICES);
 	}
 
-	@Override
-	public void run() {
-		TaxiContainer<String, String> sourceData = null;
-
+	public TaxiContainer<String, String> handleCachedData() {
+		TaxiContainer<String, String> data = null;
+		
 		double diff = 0.0;
 
 		String cachedLocationString = _locationCache.getLine();
@@ -52,7 +46,10 @@ public class TaxiLocator implements Runnable {
 		if(cachedLocationString != null) {
 			Log.v("TaxiLocator", "Persisted location discovered...");
 			
-			Location oldLocation = new Location(cachedLocationString);
+			Location oldLocation = new Location("gps");
+			String[] values = cachedLocationString.split(",");
+			oldLocation.setLatitude(Double.valueOf(values[0]));
+			oldLocation.setLongitude(Double.valueOf(values[1]));
 			
 			// Check if we've moved far enough away to merit more HTTP requests
 			diff = 
@@ -65,22 +62,28 @@ public class TaxiLocator implements Runnable {
 		if(diff > this.LOC_TOLERANCE || cachedLocationString == null) {
 			Log.v("TaxiLocator", "Retrieving and caching local taxi services...");
 			String json = this.getJson();
-			sourceData = this.getPlaceResults(json);
-			_taxiCache.doPersist(sourceData);
+			data = this.getPlaceResults(json);
+			_taxiCache.doPersist(data);
 		}
 		else if(diff < this.LOC_TOLERANCE && cachedLocationString != null) {
 			Log.v("TaxiLocator", "Retrieving cached taxi services...");
-			sourceData = (TaxiContainer<String, String>) _taxiCache.getObject();
-		}
-
-		try {
-			_messenger.send(this.createMessage(sourceData));
-		} catch (RemoteException e) {
-			Log.e("TaxiLocator", "RemoteException: " + e);
+			data = (TaxiContainer<String, String>) _taxiCache.getObject();
 		}
 		
 		String saveLocation = _location.getLatitude() + "," + _location.getLongitude();
 		_locationCache.writeLine(saveLocation);
+		
+		return data;
+	}
+	
+	@Override
+	public void run() {
+		try {
+			TaxiContainer<String, String> sourceData = this.handleCachedData();
+			_messenger.send(this.createMessage(sourceData));
+		} catch (RemoteException e) {
+			Log.e("TaxiLocator", "RemoteException: " + e);
+		}
 
 	}
 
@@ -106,7 +109,7 @@ public class TaxiLocator implements Runnable {
 		try {
 			result = new TaxiContainer<String, String>();
 			json = new JSONObject(jsonData);
-			JSONArray array = json.getJSONArray(this.RESULTS);
+			JSONArray array = json.getJSONArray("results");
 
 			for(int i = 0; i < array.length(); i++) {
 				JSONObject o = (JSONObject) array.get(i);
@@ -122,9 +125,9 @@ public class TaxiLocator implements Runnable {
 				attributes.put("reference", ref);
 				attributes.put("sensor", "true");
 				attributes.put("key", this.API_KEY);
-				String url = this.buildURL(baseURL, attributes);
+				String url = WebUtils.buildURL(baseURL, attributes);
 
-				JSONObject phoneJson = new JSONObject(this.getHttpStream(url));
+				JSONObject phoneJson = new JSONObject(WebUtils.getHttpStream(url));
 				Log.v("TaxiLocator", phoneJson.toString());
 				if(phoneJson.has("result")) {
 					JSONObject phoneObj = phoneJson.getJSONObject("result");
@@ -144,51 +147,7 @@ public class TaxiLocator implements Runnable {
 
 		return result;
 	}
-
-	private String buildURL(String baseURL, Map<String, String> attributes) {
-		String url = baseURL;
-
-		boolean appendAmp = false;
-
-		for(Map.Entry<String, String> e : attributes.entrySet()) {
-			if(appendAmp) {
-				url += "&";
-			}
-			url += e.getKey() + "=" + e.getValue();
-
-			appendAmp = true;
-		}
-
-		Log.v("TaxiLocator", "Built URL: " + url);
-
-		return url;
-	}
-
-	private String getHttpStream(String url) {
-		String stream = "";
-
-		URL urlObj;
-		try {
-			urlObj = new URL(url);
-			HttpURLConnection connection = (HttpURLConnection) urlObj.openConnection();
-			connection.setDoOutput(true);
-			DataInputStream in = new DataInputStream(connection.getInputStream());
-			String add = "";
-			while(add != null) {
-				add = in.readLine();
-				stream += add;
-			}
-		} catch (MalformedURLException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-
-		Log.v("TaxiLocator", "Got HTTP Stream: " + stream);
-
-		return stream;
-	}
-
+	
 	private String getJson() {
 		double lat, longitude;
 		lat = _location.getLatitude();
@@ -201,9 +160,9 @@ public class TaxiLocator implements Runnable {
 		attributes.put("keyword", "taxi");
 		attributes.put("sensor", "false");
 		attributes.put("key", this.API_KEY);
-		String url = this.buildURL(baseURL, attributes);
+		String url = WebUtils.buildURL(baseURL, attributes);
 
-		String json = getHttpStream(url);
+		String json = WebUtils.getHttpStream(url);
 
 		Log.v("TaxiLocator", "Got JSON: " + json);
 
