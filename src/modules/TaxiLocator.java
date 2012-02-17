@@ -5,6 +5,9 @@ import java.util.Map;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import caching.AbstractCacher;
+import caching.ObjectCacher;
+import caching.StringCacher;
 import android.location.Location;
 import android.os.Bundle;
 import android.os.Message;
@@ -22,58 +25,24 @@ public class TaxiLocator implements Runnable {
 	private Messenger _messenger;
 	private Location _location;
 	
-	private DataCacher _locationCache;
-	private DataCacher _taxiCache;
+	private StringCacher _locationCache;
+	private ObjectCacher<TaxiContainer<String,String>> _taxiCache;
 
-	private final double LOC_TOLERANCE = 10.0;
+	private final double LOC_TOLERANCE = 5;
+
+	private boolean _forceRefresh;
 
 	public TaxiLocator(Messenger messenger, Location location) {
-		_messenger = messenger;
-		
-		_location = location;
-		
-		_locationCache = new DataCacher(DataCacher.LOCATION);
-		_taxiCache = new DataCacher(DataCacher.TAXI_SERVICES);
+		this(messenger, location, false);
 	}
 
-	public TaxiContainer<String, String> handleCachedData() {
-		TaxiContainer<String, String> data = null;
+	public TaxiLocator(Messenger messenger, Location location, boolean forceRefresh) {
+		_messenger = messenger;
+		_location = location;
+		_forceRefresh = forceRefresh;
 		
-		double diff = 0.0;
-
-		String cachedLocationString = _locationCache.getLine();
-		
-		if(cachedLocationString != null) {
-			Log.v("TaxiLocator", "Persisted location discovered...");
-			
-			Location oldLocation = new Location("gps");
-			String[] values = cachedLocationString.split(",");
-			oldLocation.setLatitude(Double.valueOf(values[0]));
-			oldLocation.setLongitude(Double.valueOf(values[1]));
-			
-			// Check if we've moved far enough away to merit more HTTP requests
-			diff = 
-					( Math.abs(_location.getLatitude()) - Math.abs(oldLocation.getLatitude()) ) +
-					( Math.abs(_location.getLongitude()) - Math.abs(oldLocation.getLongitude()) );
-		}
-
-		Log.v("TaxiLocator", "Diff is " + diff);
-
-		if(diff > this.LOC_TOLERANCE || cachedLocationString == null) {
-			Log.v("TaxiLocator", "Retrieving and caching local taxi services...");
-			String json = this.getJson();
-			data = this.getPlaceResults(json);
-			_taxiCache.doPersist(data);
-		}
-		else if(diff < this.LOC_TOLERANCE && cachedLocationString != null) {
-			Log.v("TaxiLocator", "Retrieving cached taxi services...");
-			data = (TaxiContainer<String, String>) _taxiCache.getObject();
-		}
-		
-		String saveLocation = _location.getLatitude() + "," + _location.getLongitude();
-		_locationCache.writeLine(saveLocation);
-		
-		return data;
+		_locationCache = new StringCacher(AbstractCacher.LOCATION);
+		_taxiCache = new ObjectCacher<TaxiContainer<String,String>>(AbstractCacher.TAXI_SERVICES);
 	}
 	
 	@Override
@@ -85,6 +54,53 @@ public class TaxiLocator implements Runnable {
 			Log.e("TaxiLocator", "RemoteException: " + e);
 		}
 
+	}
+
+	public TaxiContainer<String, String> handleCachedData() {
+		TaxiContainer<String, String> data = null;
+
+		double diff = 0;
+
+		String cachedLocationString = _locationCache.readData();
+
+		if(!_forceRefresh) {
+			if(cachedLocationString != null) {
+				Log.v("TaxiLocator", "Persisted location discovered...");
+
+				Location oldLocation = new Location("gps");
+				String[] values = cachedLocationString.split(",");
+				oldLocation.setLatitude(Double.valueOf(values[0]));
+				oldLocation.setLongitude(Double.valueOf(values[1]));
+
+				Log.v("TaxiLocator", "Current latitude: " + _location.getLatitude());
+				Log.v("TaxiLocator", "Current longitude: " + _location.getLongitude());
+				Log.v("TaxiLocator", "Cached latitude: " + oldLocation.getLatitude());
+				Log.v("TaxiLocator", "Cached longitude: " + oldLocation.getLongitude());
+
+				// Check if we've moved far enough away to merit more HTTP requests
+				diff = 
+						( Math.abs(_location.getLatitude()) - Math.abs(oldLocation.getLatitude()) ) +
+						( Math.abs(_location.getLongitude()) - Math.abs(oldLocation.getLongitude()) );
+			}
+		}
+
+		Log.v("TaxiLocator", "Diff is " + diff);
+
+		if(_forceRefresh || (diff > this.LOC_TOLERANCE || cachedLocationString == null)) {
+			Log.v("TaxiLocator", "Retrieving and caching local taxi services...");
+			String json = this.getJson();
+			data = this.getPlaceResults(json);
+			_taxiCache.doPersist(data);
+		}
+		else if(diff < this.LOC_TOLERANCE && cachedLocationString != null) {
+			Log.v("TaxiLocator", "Retrieving cached taxi services...");
+			data = (TaxiContainer<String, String>) _taxiCache.readData();
+		}
+
+		String saveLocation = _location.getLatitude() + "," + _location.getLongitude();
+		_locationCache.doPersist(saveLocation);
+
+		return data;
 	}
 
 	private Message createMessage(Object o) {
@@ -147,7 +163,7 @@ public class TaxiLocator implements Runnable {
 
 		return result;
 	}
-	
+
 	private String getJson() {
 		double lat, longitude;
 		lat = _location.getLatitude();

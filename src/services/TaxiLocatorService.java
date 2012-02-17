@@ -1,16 +1,10 @@
 package services;
 
 import modules.TaxiLocator;
-
-import com.projects.bacchus.BacchusActivity;
-
 import activities.TaxiServiceActivity;
 import android.app.Service;
-import android.content.Context;
 import android.content.Intent;
-import android.location.Criteria;
 import android.location.Location;
-import android.location.LocationManager;
 import android.os.IBinder;
 import android.os.Messenger;
 import android.util.Log;
@@ -32,8 +26,10 @@ public class TaxiLocatorService extends Service {
 		
 		// Add mock location (near UB north campus)		
 		Location location = new Location("gps");
-		location.setLatitude(43.0);
-		location.setLongitude(-78.7);
+//		location.setLatitude(43.0);
+//		location.setLongitude(-78.7);
+		location.setLatitude(42.9);
+		location.setLongitude(-78.8);
 		
 		if(intent != null) {
 			Messenger messenger = (Messenger) intent.getExtras().get(TaxiServiceActivity.NEW_TAXI_HANDLER);
