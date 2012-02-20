@@ -105,8 +105,7 @@ public class TaxiLocator implements Runnable {
 
 		if(_forceRefresh || diff > this.LOC_TOLERANCE || cachedLocationString == null) {
 			Log.v("TaxiLocator", "Retrieving and caching local taxi services...");
-			String json = this.getJson();
-			data = this.getPlaceResults(json);
+			data = this.getPlaceResults();
 			_taxiCache.doPersist(data);
 		}
 		else if(diff < this.LOC_TOLERANCE && cachedLocationString != null) {
@@ -152,10 +151,27 @@ public class TaxiLocator implements Runnable {
 	 * 
 	 * Returns:
 	 * 		A new TaxiContainer containing name=>data pairs, where data is an address and phone number
+	 * 
+	 * NOTE: radius is in meters - 16,000 ~= 10mi
 	 */
-	private TaxiContainer getPlaceResults(String jsonData) {
+	private TaxiContainer getPlaceResults() {
 		TaxiContainer result = null;
 		JSONObject json;
+		
+		double latitude, longitude;
+		latitude = _location.getLatitude();
+		longitude = _location.getLongitude();
+
+		String baseURL = "https://maps.googleapis.com/maps/api/place/search/json?";
+		Map<String, String> searchAttributes = new HashMap<String, String>();
+		searchAttributes.put("location", latitude + "," + longitude);
+		searchAttributes.put("radius", "16000");
+		searchAttributes.put("keyword", "taxi");
+		searchAttributes.put("sensor", "false");
+		searchAttributes.put("key", this.API_KEY);
+		String searchURL = WebUtils.buildURL(baseURL, searchAttributes);
+
+		String jsonData = WebUtils.getHttpStream(searchURL);
 
 		try {
 			result = new TaxiContainer();
@@ -171,14 +187,14 @@ public class TaxiLocator implements Runnable {
 				// Will hold the attributes - address & phone #
 				String values = "";
 
-				String baseURL = "https://maps.googleapis.com/maps/api/place/details/json?";
-				Map<String, String> attributes = new HashMap<String, String>();
-				attributes.put("reference", ref);
-				attributes.put("sensor", "true");
-				attributes.put("key", this.API_KEY);
-				String url = WebUtils.buildURL(baseURL, attributes);
+				String detailBaseURL = "https://maps.googleapis.com/maps/api/place/details/json?";
+				Map<String, String> detailAttributes = new HashMap<String, String>();
+				detailAttributes.put("reference", ref);
+				detailAttributes.put("sensor", "true");
+				detailAttributes.put("key", this.API_KEY);
+				String detailURL = WebUtils.buildURL(detailBaseURL, detailAttributes);
 
-				JSONObject phoneJson = new JSONObject(WebUtils.getHttpStream(url));
+				JSONObject phoneJson = new JSONObject(WebUtils.getHttpStream(detailURL));
 				Log.v("TaxiLocator", phoneJson.toString());
 				if(phoneJson.has("result")) {
 					JSONObject phoneObj = phoneJson.getJSONObject("result");
@@ -197,33 +213,6 @@ public class TaxiLocator implements Runnable {
 		}
 
 		return result;
-	}
-
-	/*
-	 * Method: getJson
-	 * 
-	 * Returns a JSON list, as a String, of nearby taxi services
-	 * NOTE: radius is in meters - 16,000 ~= 10mi
-	 */
-	private String getJson() {
-		double lat, longitude;
-		lat = _location.getLatitude();
-		longitude = _location.getLongitude();
-
-		String baseURL = "https://maps.googleapis.com/maps/api/place/search/json?";
-		Map<String, String> attributes = new HashMap<String, String>();
-		attributes.put("location", lat + "," + longitude);
-		attributes.put("radius", "16000");
-		attributes.put("keyword", "taxi");
-		attributes.put("sensor", "false");
-		attributes.put("key", this.API_KEY);
-		String url = WebUtils.buildURL(baseURL, attributes);
-
-		String json = WebUtils.getHttpStream(url);
-
-		Log.v("TaxiLocator", "Got JSON: " + json);
-
-		return json;
 	}
 
 }
