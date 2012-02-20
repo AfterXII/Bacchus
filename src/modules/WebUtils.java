@@ -65,6 +65,8 @@ public class WebUtils {
 				add = in.readLine();
 				stream += add;
 			}
+			connection.disconnect();
+			in.close();
 		} catch (MalformedURLException e) {
 			e.printStackTrace();
 		} catch (IOException e) {

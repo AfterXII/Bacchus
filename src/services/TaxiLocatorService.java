@@ -38,9 +38,9 @@ public class TaxiLocatorService extends Service {
 			// Unpack the TaxiServiceActivity handler
 			Messenger messenger = (Messenger) intent.getExtras().get(TaxiServiceActivity.NEW_TAXI_HANDLER);
 			
-			// Only start a new thread if one isn't still running
+//			Only start a new thread if one isn't still running
 			if(_t == null || !_t.isAlive()) {
-				_t = new Thread(new TaxiLocator(messenger, location));
+				_t = new Thread(new TaxiLocator(messenger, location, true));
 				_t.start();
 			}
 		}

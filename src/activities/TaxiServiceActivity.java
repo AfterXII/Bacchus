@@ -1,18 +1,32 @@
 package activities;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import modules.TaxiContainer;
 import modules.TaxiLocator;
+import modules.WebUtils;
+
 import com.projects.bacchus.R;
+
+import android.app.AlertDialog;
 import android.app.ListActivity;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.view.View;
 import android.widget.ArrayAdapter;
+import android.widget.ListView;
 import services.TaxiLocatorService;
 import android.content.Intent;
 import android.os.Messenger;
+import android.util.Log;
 
 /*
  * Class: TaxiServiceActivity
@@ -22,10 +36,11 @@ import android.os.Messenger;
 public class TaxiServiceActivity extends ListActivity {
 	public static final String NEW_TAXI = "NewTaxi";
 	public static final String NEW_TAXI_HANDLER = "NewTaxiHandler";
-	
+
 	private ArrayList<String> _items;
 	private ArrayAdapter<String> _adapter;
-	
+	private TaxiContainer _results;
+
 	/*
 	 * Method: addItem
 	 * Parameters
@@ -37,16 +52,74 @@ public class TaxiServiceActivity extends ListActivity {
 		_items.add(newItem);
 		_adapter.notifyDataSetChanged();
 	}
+
+	@Override
+	protected void onListItemClick(ListView l, View v, int position, long id) { 
+		final String key = _items.get(position);
+		final String refId = _results.get(key);
+		
+		String details = "";
+		try {
+			details = new AsyncTask<Void, Void, String>() {
+				@Override
+				protected String doInBackground(Void... params) {
+					String values = "";
+					
+					if(_results != null) {	
+						String detailBaseURL = "https://maps.googleapis.com/maps/api/place/details/json?";
+						Map<String, String> detailAttributes = new HashMap<String, String>();
+						detailAttributes.put("reference", refId);
+						detailAttributes.put("sensor", "true");
+						detailAttributes.put("key", TaxiLocator.API_KEY);
+						String detailURL = WebUtils.buildURL(detailBaseURL, detailAttributes);
+
+						JSONObject phoneJson;
+						try {
+							phoneJson = new JSONObject(WebUtils.getHttpStream(detailURL));
+
+							Log.v("TaxiLocator", phoneJson.toString());
+							if(phoneJson.has("result")) {
+								JSONObject phoneObj = phoneJson.getJSONObject("result");
+
+								String formattedPhone = phoneObj.getString("formatted_phone_number");
+								String formattedAddress = phoneObj.getString("formatted_address");
+
+								// Don't add in the area code... these are all local					
+								values = formattedAddress + ", " + formattedPhone.substring(6);
+							}
+						} catch (JSONException e) {
+
+						}
+					}
+					
+					return values;
+				}			
+			}.execute().get();
+		} catch (InterruptedException e) {
+			
+		} catch (ExecutionException e) {
+			
+		}
+		
+		AlertDialog.Builder builder = new AlertDialog.Builder(this);
+		builder.setMessage("Use " + key + " (" + details + ")?");
+		builder.setPositiveButton("Yes", null);
+		builder.setNegativeButton("No", null);
+		builder.show();
+		
+		Log.v("TaxiServiceActivity", "Retrieved details: " + details);
 	
+	}
+
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		
+
 		// Let the activity know that _items holds the data for our ListView
 		_items = new ArrayList<String>();
 		_adapter = new ArrayAdapter<String>(this,
 				android.R.layout.simple_list_item_1, _items);
-		
+
 		// This handler allows TaxiLocatorService to pass messages back to our UI thread
 		Handler addListItemHandler = new Handler() {
 			/*
@@ -59,26 +132,27 @@ public class TaxiServiceActivity extends ListActivity {
 			@Override
 			public void handleMessage(Message msg) {
 				TaxiContainer result = msg.getData().getParcelable(TaxiLocator.JSON_STREAM);
-				
+
+				_results = result;
+
 				if(result.size() > 0) {
 					for(Map.Entry<String, String> m : result.entrySet()) {
-						String newItem = m.getKey() + ": " + m.getValue();
-						addItem(newItem);
+						addItem(m.getKey());
 					}
-		 		} else {
+				} else {
 					addItem("No nearby taxis found.");
 				}
 			}
 		};
-		
+
 		// Start the TaxiLocatorService in the background, and give it the handler
 		Intent findTaxis = new Intent(this, TaxiLocatorService.class);
 		findTaxis.putExtra(TaxiServiceActivity.NEW_TAXI_HANDLER, new Messenger(addListItemHandler));
 		startService(findTaxis);
-		
+
 		// This is a ListActivity, so set our list adapter to reflect changes to _items
 		setListAdapter(_adapter);
-		
+
 		setContentView(R.layout.taxiservices);
 	}
 }

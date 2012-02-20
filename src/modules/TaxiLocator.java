@@ -26,7 +26,7 @@ public class TaxiLocator implements Runnable {
 	public static final String JSON_STREAM = "NewJsonStream";
 
 	// Google Places API key
-	private final String API_KEY = "AIzaSyBdXAPJl6qkgF1BMAL9NPOszpG16P1E8vQ";
+	public final static String API_KEY = "AIzaSyBdXAPJl6qkgF1BMAL9NPOszpG16P1E8vQ";
 
 	private Messenger _messenger;
 	private Location _location;
@@ -187,7 +187,7 @@ public class TaxiLocator implements Runnable {
 				// Will hold the attributes - address & phone #
 				String values = "";
 
-				String detailBaseURL = "https://maps.googleapis.com/maps/api/place/details/json?";
+				/*String detailBaseURL = "https://maps.googleapis.com/maps/api/place/details/json?";
 				Map<String, String> detailAttributes = new HashMap<String, String>();
 				detailAttributes.put("reference", ref);
 				detailAttributes.put("sensor", "true");
@@ -204,9 +204,10 @@ public class TaxiLocator implements Runnable {
 
 					// Don't add in the area code... these are all local					
 					values = formattedAddress + " (" + formattedPhone.substring(6) + ")";
-				}
+				}*/
 
-				result.put(name, values);
+//				result.put(name, values);
+				result.put(name, ref);
 			}
 		} catch (JSONException e) {
 			Log.e("TaxiLocator", "JSONException: " + e);
