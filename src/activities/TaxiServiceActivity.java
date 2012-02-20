@@ -4,16 +4,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
-
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import modules.TaxiContainer;
-import modules.TaxiLocator;
 import modules.WebUtils;
-
 import com.projects.bacchus.R;
-
+import constants.Constants;
 import android.app.AlertDialog;
 import android.app.ListActivity;
 import android.os.AsyncTask;
@@ -24,6 +19,7 @@ import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import services.TaxiLocatorService;
+import structures.TaxiContainer;
 import android.content.Intent;
 import android.os.Messenger;
 import android.util.Log;
@@ -67,15 +63,14 @@ public class TaxiServiceActivity extends ListActivity {
 					
 					if(_results != null) {	
 						String detailBaseURL = "https://maps.googleapis.com/maps/api/place/details/json?";
-						Map<String, String> detailAttributes = new HashMap<String, String>();
-						detailAttributes.put("reference", refId);
-						detailAttributes.put("sensor", "true");
-						detailAttributes.put("key", TaxiLocator.API_KEY);
-						String detailURL = WebUtils.buildURL(detailBaseURL, detailAttributes);
+						Map<String, String> attributes = new HashMap<String, String>();
+						attributes.put("reference", refId);
+						attributes.put("sensor", "true");
+						attributes.put("key", Constants.API.PLACES_API_KEY);
+						String detailURL = WebUtils.buildURL(detailBaseURL, attributes);
 
-						JSONObject phoneJson;
 						try {
-							phoneJson = new JSONObject(WebUtils.getHttpStream(detailURL));
+							JSONObject phoneJson = new JSONObject(WebUtils.getHttpStream(detailURL));
 
 							Log.v("TaxiLocator", phoneJson.toString());
 							if(phoneJson.has("result")) {
@@ -95,6 +90,7 @@ public class TaxiServiceActivity extends ListActivity {
 					return values;
 				}			
 			}.execute().get();
+			
 		} catch (InterruptedException e) {
 			
 		} catch (ExecutionException e) {
@@ -131,7 +127,7 @@ public class TaxiServiceActivity extends ListActivity {
 			 */
 			@Override
 			public void handleMessage(Message msg) {
-				TaxiContainer result = msg.getData().getParcelable(TaxiLocator.JSON_STREAM);
+				TaxiContainer result = msg.getData().getParcelable(Constants.Handlers.JSON_STREAM);
 
 				_results = result;
 

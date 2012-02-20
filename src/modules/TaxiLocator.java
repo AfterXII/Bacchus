@@ -5,6 +5,10 @@ import java.util.Map;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import constants.Constants;
+
+import structures.TaxiContainer;
 import caching.AbstractCacher;
 import caching.ObjectCacher;
 import caching.StringCacher;
@@ -23,20 +27,12 @@ import modules.WebUtils;
  */
 public class TaxiLocator implements Runnable {
 
-	public static final String JSON_STREAM = "NewJsonStream";
-
-	// Google Places API key
-	public final static String API_KEY = "AIzaSyBdXAPJl6qkgF1BMAL9NPOszpG16P1E8vQ";
-
 	private Messenger _messenger;
 	private Location _location;
+	private boolean _forceRefresh;
 	
 	private StringCacher _locationCache;
 	private ObjectCacher<TaxiContainer> _taxiCache;
-
-	private final double LOC_TOLERANCE = 5;
-
-	private boolean _forceRefresh;
 
 	public TaxiLocator(Messenger messenger, Location location) {
 		this(messenger, location, false);
@@ -103,12 +99,12 @@ public class TaxiLocator implements Runnable {
 
 		Log.v("TaxiLocator", "Diff is " + diff);
 
-		if(_forceRefresh || diff > this.LOC_TOLERANCE || cachedLocationString == null) {
+		if(_forceRefresh || diff > Constants.Numbers.LOCATION_TOLERANCE || cachedLocationString == null) {
 			Log.v("TaxiLocator", "Retrieving and caching local taxi services...");
 			data = this.getPlaceResults();
 			_taxiCache.doPersist(data);
 		}
-		else if(diff < this.LOC_TOLERANCE && cachedLocationString != null) {
+		else if(diff < Constants.Numbers.LOCATION_TOLERANCE && cachedLocationString != null) {
 			Log.v("TaxiLocator", "Retrieving cached taxi services...");
 			data = (TaxiContainer) _taxiCache.readData();
 		}
@@ -131,7 +127,7 @@ public class TaxiLocator implements Runnable {
 		Bundle bundle = new Bundle();
 
 		if(o instanceof TaxiContainer) {
-			bundle.putParcelable(TaxiLocator.JSON_STREAM, (TaxiContainer) o);
+			bundle.putParcelable(Constants.Handlers.JSON_STREAM, (TaxiContainer) o);
 		} else {
 			Log.e("TaxiLocator", "TaxiLocator cannot bundle type " + o.getClass());
 		}
@@ -168,7 +164,7 @@ public class TaxiLocator implements Runnable {
 		searchAttributes.put("radius", "16000");
 		searchAttributes.put("keyword", "taxi");
 		searchAttributes.put("sensor", "false");
-		searchAttributes.put("key", this.API_KEY);
+		searchAttributes.put("key", Constants.API.PLACES_API_KEY);
 		String searchURL = WebUtils.buildURL(baseURL, searchAttributes);
 
 		String jsonData = WebUtils.getHttpStream(searchURL);
@@ -184,29 +180,6 @@ public class TaxiLocator implements Runnable {
 				String name = o.getString("name");
 				String ref = o.getString("reference");
 
-				// Will hold the attributes - address & phone #
-				String values = "";
-
-				/*String detailBaseURL = "https://maps.googleapis.com/maps/api/place/details/json?";
-				Map<String, String> detailAttributes = new HashMap<String, String>();
-				detailAttributes.put("reference", ref);
-				detailAttributes.put("sensor", "true");
-				detailAttributes.put("key", this.API_KEY);
-				String detailURL = WebUtils.buildURL(detailBaseURL, detailAttributes);
-
-				JSONObject phoneJson = new JSONObject(WebUtils.getHttpStream(detailURL));
-				Log.v("TaxiLocator", phoneJson.toString());
-				if(phoneJson.has("result")) {
-					JSONObject phoneObj = phoneJson.getJSONObject("result");
-
-					String formattedPhone = phoneObj.getString("formatted_phone_number");
-					String formattedAddress = phoneObj.getString("formatted_address");
-
-					// Don't add in the area code... these are all local					
-					values = formattedAddress + " (" + formattedPhone.substring(6) + ")";
-				}*/
-
-//				result.put(name, values);
 				result.put(name, ref);
 			}
 		} catch (JSONException e) {
