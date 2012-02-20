@@ -16,10 +16,16 @@ import android.os.RemoteException;
 import android.util.Log;
 import modules.WebUtils;
 
+/*
+ * Class: TaxiLocator
+ * 
+ * Finds nearby taxi services and sends them back to TaxiLocatorService in a TaxiContainer (this happens in "run")
+ */
 public class TaxiLocator implements Runnable {
 
 	public static final String JSON_STREAM = "NewJsonStream";
 
+	// Google Places API key
 	private final String API_KEY = "AIzaSyBdXAPJl6qkgF1BMAL9NPOszpG16P1E8vQ";
 
 	private Messenger _messenger;
@@ -56,6 +62,17 @@ public class TaxiLocator implements Runnable {
 
 	}
 
+	/*
+	 * Method: handleCachedData
+	 * 
+	 * Check if we have cached location data. If we do, decide if we've gotten far enough away from the
+	 * cached location to warrant additional HTTP requests and time. If so, generate new results. If not,
+	 * re-inflate the TaxiContainer structure from local memory and return it.
+	 * 
+	 * Returns:
+	 * 		A TaxiContainer with new results, if there is no cache or the user has moved past our tolerance.
+	 * 		A cached TaxiContainer with existing results, otherwise.
+	 */
 	public TaxiContainer handleCachedData() {
 		TaxiContainer data = null;
 
@@ -103,6 +120,13 @@ public class TaxiLocator implements Runnable {
 		return data;
 	}
 
+	/*
+	 * Method: createMessage
+	 * Parameters:
+	 * 		Object o: an object to be bundled with the message
+	 * 
+	 * Returns: a message that can be passed across threads, bundled with o if it was a TaxiContainer
+	 */
 	private Message createMessage(Object o) {
 		Message msg = new Message();
 		Bundle bundle = new Bundle();
@@ -118,6 +142,17 @@ public class TaxiLocator implements Runnable {
 		return msg;
 	}
 
+	/*
+	 * Method: getPlaceResults
+	 * Parameters:
+	 * 		String jsonData: the JSON returned by the Google Places API
+	 * 
+	 * Takes the JSON returned by the Google Places API, and requests additional information (formatted
+	 * address and phone number) from the API using the returned "reference ID."
+	 * 
+	 * Returns:
+	 * 		A new TaxiContainer containing name=>data pairs, where data is an address and phone number
+	 */
 	private TaxiContainer getPlaceResults(String jsonData) {
 		TaxiContainer result = null;
 		JSONObject json;
@@ -164,6 +199,12 @@ public class TaxiLocator implements Runnable {
 		return result;
 	}
 
+	/*
+	 * Method: getJson
+	 * 
+	 * Returns a JSON list, as a String, of nearby taxi services
+	 * NOTE: radius is in meters - 16,000 ~= 10mi
+	 */
 	private String getJson() {
 		double lat, longitude;
 		lat = _location.getLatitude();

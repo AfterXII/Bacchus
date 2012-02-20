@@ -1,5 +1,10 @@
 package caching;
 
+/*
+ * Class: AbstractCacher
+ * 
+ * A class which can be extended to persist and inflate various types from local memory
+ */
 public abstract class AbstractCacher<K> {
 
 	public static final String LOCATION = "location";

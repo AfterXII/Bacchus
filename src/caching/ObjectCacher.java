@@ -8,12 +8,26 @@ import java.io.ObjectOutputStream;
 
 import android.util.Log;
 
+/*
+ * Class: ObjectCacher
+ * Generics:
+ * 		K: the type that we are persisting to local memory
+ * 
+ * Allows us to store serializable objects to local memory and inflate them later
+ */
 public class ObjectCacher<K> extends AbstractCacher<K> {
 
 	public ObjectCacher(String type) {
 		super(type);
 	}
 
+	/*
+	 * Method: doPersist
+	 * Parameters:
+	 * 		K data: the object to be written to local memory
+	 * 
+	 * Writes a serializable object of type K to local memory
+	 */
 	@Override
 	public void doPersist(K data) {
 		FileOutputStream fos = null;
@@ -29,6 +43,11 @@ public class ObjectCacher<K> extends AbstractCacher<K> {
 		}
 	}
 
+	/*
+	 * Method: readData
+	 * 
+	 * Reads an object of type K from local memory and returns it
+	 */
 	@SuppressWarnings("unchecked")
 	@Override
 	public K readData() {

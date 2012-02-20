@@ -9,8 +9,22 @@ import java.util.Map;
 
 import android.util.Log;
 
+/*
+ * Class: WebUtils
+ * 
+ * A class of static web utilities, used when scraping web APIs, etc.
+ */
 public class WebUtils {
 	
+	/*
+	 * Method: buildURL
+	 * Parameters:
+	 * 		String baseURL: the URL, if any, to build the new URL on top of
+	 * 		Map<String, String> attributes: an attribute list to write on the url
+	 * 			e.g. ["radius", "5000"] would result in http://url.com?radius=5000
+	 * 
+	 * Builds a URL on top of a base URL (if any) using provided attributes
+	 */
 	public static String buildURL(String baseURL, Map<String, String> attributes) {
 		String url = baseURL;
 
@@ -30,6 +44,13 @@ public class WebUtils {
 		return url;
 	}
 	
+	/*
+	 * Method: getHttpStream
+	 * Parameters:
+	 * 		String url: the URL to get a stream from - usually build by buildURL
+	 * 
+	 * Returns the resultant data from sending an HTTP request to the provided URL
+	 */
 	public static String getHttpStream(String url) {
 		String stream = "";
 

@@ -9,12 +9,24 @@ import java.io.InputStreamReader;
 
 import android.util.Log;
 
+/*
+ * Class: StringCacher
+ * 
+ * A strict implementation of AbstractCacher, which allows us to persist String objects to local memory
+ */
 public class StringCacher extends AbstractCacher<String> {
 
 	public StringCacher(String type) {
 		super(type);
 	}
 
+	/*
+	 * Method: doPersist
+	 * Parameters:
+	 * 		String data: the string to be written to local memory
+	 * 
+	 * Writes a string to local memory
+	 */
 	@Override
 	public void doPersist(String data) {
 		FileOutputStream fos = null;
@@ -31,6 +43,11 @@ public class StringCacher extends AbstractCacher<String> {
 		}
 	}
 
+	/*
+	 * Method: readData
+	 * 
+	 * Reads an string from local memory and returns it
+	 */
 	@Override
 	public String readData() {
 		Log.v("DataCacher", "Retrieving line from file: " + _fName);

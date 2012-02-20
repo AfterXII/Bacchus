@@ -9,6 +9,11 @@ import android.os.IBinder;
 import android.os.Messenger;
 import android.util.Log;
 
+/*
+ * Class: TaxiLocatorService
+ * 
+ * A non-sticky background service that runs a TaxiLocator on a background thread
+ */
 public class TaxiLocatorService extends Service {
 
 	private Thread _t;
@@ -30,15 +35,17 @@ public class TaxiLocatorService extends Service {
 		location.setLongitude(-78.7);
 		
 		if(intent != null) {
+			// Unpack the TaxiServiceActivity handler
 			Messenger messenger = (Messenger) intent.getExtras().get(TaxiServiceActivity.NEW_TAXI_HANDLER);
 			
+			// Only start a new thread if one isn't still running
 			if(_t == null || !_t.isAlive()) {
 				_t = new Thread(new TaxiLocator(messenger, location));
 				_t.start();
 			}
 		}
 		
-		return START_STICKY;
+		return START_NOT_STICKY;
     }
 	
 	@Override
