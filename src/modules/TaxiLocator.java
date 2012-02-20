@@ -86,7 +86,7 @@ public class TaxiLocator implements Runnable {
 
 		Log.v("TaxiLocator", "Diff is " + diff);
 
-		if(_forceRefresh || (diff > this.LOC_TOLERANCE || cachedLocationString == null)) {
+		if(_forceRefresh || diff > this.LOC_TOLERANCE || cachedLocationString == null) {
 			Log.v("TaxiLocator", "Retrieving and caching local taxi services...");
 			String json = this.getJson();
 			data = this.getPlaceResults(json);
@@ -108,7 +108,7 @@ public class TaxiLocator implements Runnable {
 		Bundle bundle = new Bundle();
 
 		if(o instanceof TaxiContainer) {
-			bundle.putParcelable(this.JSON_STREAM, (TaxiContainer) o);
+			bundle.putParcelable(TaxiLocator.JSON_STREAM, (TaxiContainer) o);
 		} else {
 			Log.e("TaxiLocator", "TaxiLocator cannot bundle type " + o.getClass());
 		}

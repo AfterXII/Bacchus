@@ -29,6 +29,7 @@ public class ObjectCacher<K> extends AbstractCacher<K> {
 		}
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public K readData() {
 		K obj = null;

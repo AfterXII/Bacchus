@@ -26,10 +26,8 @@ public class TaxiLocatorService extends Service {
 		
 		// Add mock location (near UB north campus)		
 		Location location = new Location("gps");
-//		location.setLatitude(43.0);
-//		location.setLongitude(-78.7);
-		location.setLatitude(42.9);
-		location.setLongitude(-78.8);
+		location.setLatitude(43.0);
+		location.setLongitude(-78.7);
 		
 		if(intent != null) {
 			Messenger messenger = (Messenger) intent.getExtras().get(TaxiServiceActivity.NEW_TAXI_HANDLER);
