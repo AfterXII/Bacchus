@@ -76,6 +76,8 @@ public class TaxiLocator implements Runnable {
 
 		String cachedLocationString = _locationCache.readData();
 
+		// If we're not forcing HTTP requests, and there is a cached location present,
+		// find out how far the user has moved since the last cache.
 		if(!_forceRefresh) {
 			if(cachedLocationString != null) {
 				Log.v("TaxiLocator", "Persisted location discovered...");
@@ -84,11 +86,6 @@ public class TaxiLocator implements Runnable {
 				String[] values = cachedLocationString.split(",");
 				oldLocation.setLatitude(Double.valueOf(values[0]));
 				oldLocation.setLongitude(Double.valueOf(values[1]));
-
-				Log.v("TaxiLocator", "Current latitude: " + _location.getLatitude());
-				Log.v("TaxiLocator", "Current longitude: " + _location.getLongitude());
-				Log.v("TaxiLocator", "Cached latitude: " + oldLocation.getLatitude());
-				Log.v("TaxiLocator", "Cached longitude: " + oldLocation.getLongitude());
 
 				// Check if we've moved far enough away to merit more HTTP requests
 				diff = 
@@ -99,11 +96,15 @@ public class TaxiLocator implements Runnable {
 
 		Log.v("TaxiLocator", "Diff is " + diff);
 
+		// If we're forcing HTTP requests, or have exceeded the movement tolerance, or simply have not
+		// cached any locations, run the HTTP requests to get local taxi services
 		if(_forceRefresh || diff > Constants.Numbers.LOCATION_TOLERANCE || cachedLocationString == null) {
 			Log.v("TaxiLocator", "Retrieving and caching local taxi services...");
 			data = this.getPlaceResults();
 			_taxiCache.doPersist(data);
 		}
+		
+		// If we're within tolerance, and there is a cached location, load the cached TaxiContainer
 		else if(diff < Constants.Numbers.LOCATION_TOLERANCE && cachedLocationString != null) {
 			Log.v("TaxiLocator", "Retrieving cached taxi services...");
 			data = (TaxiContainer) _taxiCache.readData();
@@ -146,7 +147,8 @@ public class TaxiLocator implements Runnable {
 	 * address and phone number) from the API using the returned "reference ID."
 	 * 
 	 * Returns:
-	 * 		A new TaxiContainer containing name=>data pairs, where data is an address and phone number
+	 * 		A new TaxiContainer containing name=>refid pairs, where refid is the reference number 
+	 * 		used to get details from the places API
 	 * 
 	 * NOTE: radius is in meters - 16,000 ~= 10mi
 	 */
