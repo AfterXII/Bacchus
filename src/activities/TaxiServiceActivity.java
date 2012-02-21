@@ -123,16 +123,14 @@ public class TaxiServiceActivity extends ListActivity {
 			 * Parameters:
 			 * 		Message msg: contains a Bundle which holds a TaxiContainer full of nearby taxi services
 			 * 
-			 * Unpacks the Bundle into a new TaxiContainer and adds each item to the list
+			 * Unpacks the Bundle into a global TaxiContainer and adds each item to the list
 			 */
 			@Override
 			public void handleMessage(Message msg) {
-				TaxiContainer result = msg.getData().getParcelable(Constants.Handlers.JSON_STREAM);
+				_results = msg.getData().getParcelable(Constants.Handlers.JSON_STREAM);
 
-				_results = result;
-
-				if(result.size() > 0) {
-					for(Map.Entry<String, String> m : result.entrySet()) {
+				if(_results.size() > 0) {
+					for(Map.Entry<String, String> m : _results.entrySet()) {
 						addItem(m.getKey());
 					}
 				} else {

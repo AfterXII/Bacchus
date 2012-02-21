@@ -6,9 +6,6 @@ package caching;
  * A class which can be extended to persist and inflate various types from local memory
  */
 public abstract class AbstractCacher<K> {
-
-	public static final String LOCATION = "location";
-	public static final String TAXI_SERVICES = "taxis";
 	
 	protected String _fName;
 	

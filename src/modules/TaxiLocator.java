@@ -43,8 +43,8 @@ public class TaxiLocator implements Runnable {
 		_location = location;
 		_forceRefresh = forceRefresh;
 		
-		_locationCache = new StringCacher(AbstractCacher.LOCATION);
-		_taxiCache = new ObjectCacher<TaxiContainer>(AbstractCacher.TAXI_SERVICES);
+		_locationCache = new StringCacher(Constants.Caching.LOCATION);
+		_taxiCache = new ObjectCacher<TaxiContainer>(Constants.Caching.TAXI_SERVICES);
 	}
 	
 	@Override
