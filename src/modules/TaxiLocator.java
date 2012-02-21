@@ -94,20 +94,16 @@ public class TaxiLocator implements Runnable {
 			}
 		}
 
-		Log.v("TaxiLocator", "Diff is " + diff);
-
-		// If we're forcing HTTP requests, or have exceeded the movement tolerance, or simply have not
-		// cached any locations, run the HTTP requests to get local taxi services
-		if(_forceRefresh || diff > Constants.Numbers.LOCATION_TOLERANCE || cachedLocationString == null) {
+		// If we're not forcing HTTP requests, we are within the location tolerance, and there is a
+		// cached location, read it into the TaxiContainer
+		if(!_forceRefresh && diff < Constants.Numbers.LOCATION_TOLERANCE && cachedLocationString != null) {
+			Log.v("TaxiLocator", "Retrieving cached taxi services...");
+			data = (TaxiContainer) _taxiCache.readData();
+		} else {
+			// Otherwise, get new results and cache them for later
 			Log.v("TaxiLocator", "Retrieving and caching local taxi services...");
 			data = this.getPlaceResults();
 			_taxiCache.doPersist(data);
-		}
-		
-		// If we're within tolerance, and there is a cached location, load the cached TaxiContainer
-		else if(diff < Constants.Numbers.LOCATION_TOLERANCE && cachedLocationString != null) {
-			Log.v("TaxiLocator", "Retrieving cached taxi services...");
-			data = (TaxiContainer) _taxiCache.readData();
 		}
 
 		String saveLocation = _location.getLatitude() + "," + _location.getLongitude();
