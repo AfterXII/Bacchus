@@ -47,7 +47,6 @@ public class TaxiContainer extends HashMap<String, String> implements Parcelable
 	 * Items are stored sequentially in the Parcel, so write them in order to it
 	 * 		e.g. [key, value, key, value, ... ]
 	 */
-	@Override
 	public void writeToParcel(Parcel dest, int flags) {
 		dest.writeInt(this.size());
 		for(Map.Entry<String, String> e : this.entrySet()) {
@@ -65,7 +64,6 @@ public class TaxiContainer extends HashMap<String, String> implements Parcelable
 		}
 	};
 
-	@Override
 	public int describeContents() {
 		return 0;
 	}

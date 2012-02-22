@@ -47,7 +47,6 @@ public class TaxiLocator implements Runnable {
 		_taxiCache = new ObjectCacher<TaxiContainer>(Constants.Caching.TAXI_SERVICES);
 	}
 	
-	@Override
 	public void run() {
 		try {
 			TaxiContainer sourceData = this.handleCachedData();
